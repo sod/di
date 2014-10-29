@@ -71,8 +71,8 @@ Create a new dependency injector. The name is used in error messages, import() a
 
 ##### Arguments
 
-1. name {string}: Name of the dependency injector
-2. [imports] {di|di[]}: Existing dependency injectors to import
+1. `name {string}`: Name of the dependency injector
+2. `[imports] {di|di[]}`: Existing dependency injectors to import
 
 ##### Returns
 
@@ -96,12 +96,12 @@ Call `di.invoke(fn)` on every dependency injector inside `dis` and return array 
 
 ##### Arguments
 
-1. dis {di[]}: Array of dependency injectors
-2. fn {function}: Function to invoke
+1. `dis {di[]}`: Array of dependency injectors
+2. `fn {function}`: Function to invoke
 
 ##### Returns
 
-{*[]}: The return values of each `fn` invokation
+`{*[]}`: The return values of each `fn` invokation
 
 ##### Example
 
@@ -133,13 +133,13 @@ Inject dependencies on `fn`.
 
 ##### Arguments
 
-1. fn {function}: The function to inject the dependencies on
-2. [custom] {object}: Provide custom dependencies
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+1. `fn {function}`: The function to inject the dependencies on
+2. `[custom] {object}`: Provide custom dependencies
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-{*}: The return value of fn
+`{*}`: The return value of fn
 
 ##### Example
 
@@ -172,13 +172,13 @@ Does `require(file)` and calls `invoke()` if file returns a function. Adds `file
 
 ##### Arguments
 
-1. fn {function}: The function to inject the dependencies on
-2. [custom] {object}: Provide custom dependencies
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+1. `fn {function}`: The function to inject the dependencies on
+2. `[custom] {object}`: Provide custom dependencies
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-{*}: The return value of function from `file`
+`{*}`: The return value of function from `file`
 
 ##### Example
 
@@ -199,13 +199,13 @@ Creates a function, that calls invoke() upon its execution.
 
 ##### Arguments
 
-1. fn {function}: The function to inject the dependencies on
-2. [custom] {object}: Provide custom dependencies
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+1. `fn {function}`: The function to inject the dependencies on
+2. `[custom] {object}`: Provide custom dependencies
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-{function}: The callback function
+`{function}`: The callback function
 
 ##### Example
 
@@ -229,12 +229,12 @@ Register a dependency.
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
-2. value {*}: The value that is being returned 
+1. `name {string}`: Name of the dependency
+2. `value {*}`: The value that is being returned 
 
 ##### Returns
 
-{di}: self
+`{di}`: self
 
 ##### Example
 
@@ -257,13 +257,13 @@ Register a function that becomes lazy invoked upon first retrieval. The return v
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
-2. fn {function}: Factory function
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+1. `name {string}`: Name of the dependency
+2. `fn {function}`: Factory function
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-{di}: self
+`{di}`: self
 
 ##### Example
 
@@ -291,13 +291,13 @@ Does `require(file)` and calls `registerFactory()` if file returns a function an
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
-2. file {string}: Absolute path/to/file to require()
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+1. `name {string}`: Name of the dependency
+2. `file {string}`: Absolute path/to/file to require()
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-{di}: self
+`{di}`: self
 
 ##### Example
 
@@ -320,11 +320,11 @@ Make a dependency visible if the dependency injector is being imported.
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
+1. `name {string}`: Name of the dependency
 
 ##### Returns
 
-{di}: self
+`{di}`: self
 
 ##### Example
 
@@ -351,13 +351,13 @@ Get a single dependency.
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
-2. [publicOnly=false] {boolean}: Only look for dependencies that are `setPublic(name)`. Is true for every imported dependency injector
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown. An error can happen if `name` is a factory and this factory requests dependencies that do not exist. 
+1. `name {string}`: Name of the dependency
+2. `[publicOnly=false] {boolean}`: Only look for dependencies that are `setPublic(name)`. Is true for every imported dependency injector
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown. An error can happen if `name` is a factory and this factory requests dependencies that do not exist. 
 
 ##### Returns
 
-{*|null}: Dependency value or null if dependency was not found
+`{*|null}`: Dependency value or null if dependency was not found
 
 ##### Example
 
@@ -380,12 +380,12 @@ Get a single dependency. Throw an error if dependency is not available.
 
 ##### Arguments
 
-1. name {string}: Name of the dependency
-3. [onError] {function(error)}: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown 
+1. `name {string}`: Name of the dependency
+3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown 
 
 ##### Returns
 
-{*}: Dependency value
+`{*}`: Dependency value
 
 ##### Example
 
@@ -405,11 +405,11 @@ Import one or many existing dependency injectors.
 
 ##### Arguments
 
-1. imports {di|di[]}: Dependency injector(s)
+1. `imports {di|di[]}`: Dependency injector(s)
 
 ##### Returns
 
-{di}: self
+`{di}`: self
 
 
 ##### Example
@@ -434,12 +434,12 @@ Create a new dependency injector and add self & self.imports as imports of the n
 
 ##### Arguments
 
-1. name {string}: Name of the dependency injector
-2. [imports] {di|di[]}: Existing dependency injectors to import
+1. `name {string}`: Name of the dependency injector
+2. `[imports] {di|di[]}`: Existing dependency injectors to import
 
 ##### Returns
 
-{di}: a new dependency injector
+`{di}`: a new dependency injector
 
 ##### Example
 
@@ -462,13 +462,13 @@ List all private and public dependencies of dependency injector and all public o
 
 ##### Arguments
 
-1. [fn] {function(output)=console.log}: returns output to `fn`. If `fn` is missing, the output is being printed to console.log
-2. [inherited] {boolean=false}: used internally for recursion
-3. [processed] {object}: used internally to prevent circular recursion  
+1. `[fn] {function(output)=console.log}`: returns output to `fn`. If `fn` is missing, the output is being printed to console.log
+2. `[inherited] {boolean=false}`: used internally for recursion
+3. `[processed] {object}`: used internally to prevent circular recursion  
 
 ##### Returns
 
-{undefined}
+`{undefined}`
 
 
 ## Prefix by dependency injector name
