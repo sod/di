@@ -114,7 +114,7 @@ describe("sod-di", function() {
 		var foo = diFactory('foo');
 		var errback;
 		var brokenFn = function(missingA, di, missingB) {};
-		brokenFn._filename = 'my/long/filename.js';
+		brokenFn.__di_filename = 'my/long/filename.js';
 
 		it("di(false)", function() {
 			// errback
@@ -135,8 +135,8 @@ describe("sod-di", function() {
 			expect(errback.getCall(0).args[0].message).toMatch(/"missingA, missingB"/);
 			// put method context into the message
 			expect(errback.getCall(0).args[0].message).toMatch(/function *\( *missingA, *di, *missingB *\)/);
-			// put fn._filename into the message
-			expect(errback.getCall(0).args[0].message).toContain(brokenFn._filename);
+			// put fn.__di_filename into the message
+			expect(errback.getCall(0).args[0].message).toContain(brokenFn.__di_filename);
 
 			// without errback (throw)
 			expect(function() {

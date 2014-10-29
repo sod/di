@@ -20,7 +20,7 @@ var getParameterNames = require('get-parameter-names');
 var _ = require('lodash');
 
 var factoryKey = '__di_factory';
-var fileKey = '_filename';
+var fileKey = '__di_filename';
 
 function getMissingDependencies(args, dependencies) {
 	return _.remove(_.map(args, function(value, index) {
@@ -331,16 +331,16 @@ diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	 * @param {string} name
 	 * @param {string} message
 	 * @param {function} [context]
-	 * @param {string} [context._filename]
+	 * @param {string} [context.__di_filename]
 	 * @constructor
 	 */
 	function DependencyInjectionError(name, message, context) {
 		this.name = 'DependencyInjectionError';
 		this.message = 'di.js: ' + message + ' (di: ' + name + ')';
-		this.message += context && context._filename ? '\n    at file (' + context._filename + ':1:0)' : '';
+		this.message += context && context[fileKey] ? '\n    at file (' + context[fileKey] + ':1:0)' : '';
 		this.message += context ? [].concat('', '... context ...', context.toString().split('\n').splice(0, 5), '...', '').join('\n') : '';
 		Error.captureStackTrace && Error.captureStackTrace(this, DependencyInjectionError);
-	};
+	}
 
 	DependencyInjectionError.prototype = new Error();
 	DependencyInjectionError.prototype.constructor = DependencyInjectionError;
