@@ -1,0 +1,37 @@
+{
+  "name": "sod-di",
+  "version": "1.0.0",
+  "description": "Dependency Injection",
+  "main": "di.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node node_modules/mocha/bin/_mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sod/di.git"
+  },
+  "keywords": [
+    "di",
+    "dependency",
+    "injection",
+    "injector"
+  ],
+  "author": "Alexander von Weiss <sodavw@gmail.com> (https://github.com/sod)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sod/di/issues"
+  },
+  "homepage": "https://github.com/sod/di",
+  "dependencies": {
+    "get-parameter-names": "^0.2.0",
+    "lodash": "^2.4.1"
+  },
+  "devDependencies": {
+    "expectations": "^0.2.5",
+    "mocha": "^2.0.1",
+    "sinon": "^1.11.1"
+  }
+}
