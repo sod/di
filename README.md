@@ -4,13 +4,13 @@ Dependency Injection for node.js inspired by Angular.js
 
 ## Install
 
-```
+```javascript
 npm install sod-di
 ```
 
 ## Example
 
-```
+```javascript
 var di = require('sod-di')();
 di.register('value', 'my value');
 di(function(value) {
@@ -40,24 +40,24 @@ Using dependency injection instead of require() in your project hugely improves 
 
 #### Factory
 
-**[diFactory()](#difactory)**
-**[mapInvoke()](#mapinvoke)**
+* **[diFactory()](#difactory)**
+* **[mapInvoke()](#mapinvoke)**
 
 #### Dependency injector instance
 
-**[invoke()](#invoke)**
-**[mapInvoke()](#mapinvoke)**
-**[file()](#file)**
-**[callback()](#callback)**
-**[register()](#register)**
-**[registerFactory()](#registerfactory)**
-**[registerFile()](#registerfile)**
-**[setPublic()](#setpublic)**
-**[get()](#get)**
-**[require()](#require)**
-**[import()](#import)**
-**[newChild()](#newchild)**
-**[showDependencies()](#showdependencies)**
+* **[invoke()](#invoke)**
+* **[mapInvoke()](#mapinvoke)**
+* **[file()](#file)**
+* **[callback()](#callback)**
+* **[register()](#register)**
+* **[registerFactory()](#registerfactory)**
+* **[registerFile()](#registerfile)**
+* **[setPublic()](#setpublic)**
+* **[get()](#get)**
+* **[require()](#require)**
+* **[import()](#import)**
+* **[newChild()](#newchild)**
+* **[showDependencies()](#showdependencies)**
 
 
 
@@ -80,7 +80,7 @@ Create a new dependency injector. The name is used in error messages, import() a
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = diFactory('service', [app]);
@@ -105,7 +105,7 @@ Call `di.invoke(fn)` on every dependency injector inside `dis` and return array 
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app1 = diFactory('app1');
 var app2 = diFactory('app2');
@@ -143,7 +143,7 @@ Inject dependencies on `fn`.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 'my value');
@@ -182,7 +182,7 @@ Does `require(file)` and calls `invoke()` if file returns a function. Adds `file
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.file('/my/function.js');
@@ -209,7 +209,7 @@ Creates a function, that calls invoke() upon its execution.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 'my value');
@@ -238,7 +238,7 @@ Register a dependency.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 'my value');
@@ -267,7 +267,7 @@ Register a function that becomes lazy invoked upon first retrieval. The return v
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 1);
@@ -301,7 +301,7 @@ Does `require(file)` and calls `registerFactory()` if file returns a function an
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.registerFile('value', '/my/value.js');
@@ -328,7 +328,7 @@ Make a dependency visible if the dependency injector is being imported.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = diFactory('service', [app]);
@@ -361,7 +361,7 @@ Get a single dependency.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 'my value');
@@ -389,7 +389,7 @@ Get a single dependency. Throw an error if dependency is not available.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.get('value'); // throws `new diFactory.Error` as 'value' does not exist 
@@ -414,7 +414,7 @@ Import one or many existing dependency injectors.
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = diFactory('service');
@@ -443,7 +443,7 @@ Create a new dependency injector and add self & self.imports as imports of the n
 
 ##### Example
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = app.newChild('service');
@@ -475,7 +475,7 @@ List all private and public dependencies of dependency injector and all public o
 
 You can target a specific dependency injector by prefixing the dependency
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = app.newChild('service');
@@ -494,7 +494,7 @@ service(function(value, appValue, serviceValue) {
 
 Every dependency injector adds itself as "di" and "[name]di"
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app(function(di) {
@@ -506,7 +506,7 @@ app(function(di) {
 
 Every dependency is case insensitive. Uppercase letters can be used for readability.
 
-```
+```javascript
 var diFactory = require('sod-di');
 var app = diFactory('aPP');
 app.register('valUE', 'my app value');
