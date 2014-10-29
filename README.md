@@ -76,7 +76,7 @@ Create a new dependency injector. The name is used in error messages, import() a
 
 ##### Returns
 
-{di}: a new dependency injector
+`{di}`: a new dependency injector
 
 ##### Example
 
@@ -213,7 +213,7 @@ Creates a function, that calls invoke() upon its execution.
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('value', 'my value');
-var callback = app.callback(function myMethod(value) {
+var callback = app.callback(function(value) {
 	console.log(value);
 });
 setTimeout(callback, 500); // stdout after 500ms: 'my value'
