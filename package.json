@@ -1,6 +1,6 @@
 {
   "name": "sod-di",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Dependency Injection",
   "main": "di.js",
   "directories": {

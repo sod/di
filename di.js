@@ -105,7 +105,7 @@ function diFactory(name, imports) {
 	/**
 	 * alias
 	 */
-	di.mapInvoke = diFactory.mapInvoke;
+	di.diFactory = diFactory;
 
 	/**
 	 * dependency inject on file if module.exports is function
@@ -138,17 +138,6 @@ function diFactory(name, imports) {
 				_importCache = {};
 			}
 		});
-		return di;
-	};
-
-	/**
-	 * make dependency available on import
-	 * @param {string} name
-	 * @returns {di}
-	 */
-	di.setPublic = function(name) {
-		var key = name.toLowerCase();
-		_public[key] = _public[di.diName + key] = true;
 		return di;
 	};
 
@@ -235,55 +224,78 @@ function diFactory(name, imports) {
 	};
 
 	/**
-	 * register a namespace
 	 * @param {string} name
-	 * @param {*} mixed
-	 * @returns {di}
+	 * @param {function(err)} [onError] - callback to catch errors, if no callback is provided,
+	 *      this method throws on error on error
+	 * @constructor
 	 */
-	di.register = function(name, mixed) {
-		var key = name.toLowerCase();
-		_registers[key] = _registers[di.diName + key] = mixed;
-		_names[key] = true;
-		return di;
+	function Dependency(name, onError) {
+		this.di = di;
+		this.name = String(name).replace(/[^a-z]+/ig, '').toLowerCase();
+		this.onError = typeof onError === 'function' ? onError : $throw;
+	}
+
+	/**
+	 * set dependency public
+	 * @returns {Dependency}
+	 */
+	Dependency.prototype.public = function() {
+		_public[this.name] = _public[di.diName + this.name] = true;
+		return this;
+	};
+
+	/**
+	 * @param {*} value
+	 * @returns {Dependency}
+	 */
+	Dependency.prototype.value = function(value) {
+		_registers[this.name] = _registers[di.diName + this.name] = value;
+		_names[this.name] = true;
+		return this;
 	};
 
 	/**
 	 * register a namespace, that becomes dependencies injected itself and is executed once on first request
 	 * @throws Error if fn is not a function
-	 * @param {string} name
 	 * @param {function} fn
-	 * @param {function(err)} [onError] - callback to catch errors, if no callback is provided,
-	 *      this method throws on error on error
-	 * @returns {di}
+	 * @returns {Dependency}
 	 */
-	di.registerFactory = function(name, fn, onError) {
+	Dependency.prototype.factory = function(fn) {
 		if(typeof fn !== 'function') {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" was defined as factory but is not typeof function'));
-			return di;
+			this.onError(new diFactory.Error(di.diName, '"' + name + '" was defined as factory but is not typeof function'));
+			return this;
 		}
 
 		var callback = di.callback(fn);
 		callback[factoryKey] = true;
-		di.register(name, callback);
-		return di;
+		this.value(callback);
+		return this;
 	};
 
 	/**
-	 * require file and registerFactory() if module.exports is function, otherwise register()
-	 * @param {string} name
+	 * require file and this.factory() if module.exports is function, otherwise this.value()
 	 * @param {string} file
-	 * @param {function(err)} [onError]
-	 * @returns {di}
+	 * @returns {Dependency}
 	 */
-	di.registerFile = function(name, file, onError) {
-		var method = 'register';
+	Dependency.prototype.file = function(file) {
+		var method = 'value';
 		var contents = require(file);
 		if(typeof contents === 'function') {
-			method = 'registerFactory';
+			method = 'factory';
 			contents[fileKey] = file;
 		}
-		di[method](name, contents, onError);
-		return di;
+		this[method](contents);
+		return this;
+	};
+
+	/**
+	 * register a namespace
+	 * @param {string} name
+	 * @param {function} [onError]
+	 * @returns {diFactory.Dependency}
+	 */
+	di.register = function(name, onError) {
+		return new Dependency(name, onError);
 	};
 
 	/**
@@ -323,7 +335,8 @@ function diFactory(name, imports) {
 
 	di.diName = String(name).replace(/[^a-z]+/ig, '').toLowerCase();
 	di.import(imports);
-	return di.register('di', di);
+	di.register('di').value(di);
+	return di;
 }
 
 /**

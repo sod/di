@@ -22,11 +22,11 @@ describe("sod-di", function() {
 			return 1;
 		};
 		expect(foo.get('service')).toBe(null);
-		foo.register('service', service);
+		foo.register('service').value(service);
 		expect(foo.get('service')).toBe(service);
 	});
 
-	it("registerFactory()", function() {
+	it("register().factory()", function() {
 		var foo = diFactory('foo');
 		var value = 123;
 		var serviceCalled = 0;
@@ -34,8 +34,8 @@ describe("sod-di", function() {
 			serviceCalled += 1;
 			return fooValue + value;
 		};
-		foo.register('value', value);
-		foo.registerFactory('service', service);
+		foo.register('value').value(value);
+		foo.register('service').factory(service);
 
 		// fetch service twice, only executed once, gets dependencies itself
 		expect(serviceCalled).toBe(0);
@@ -44,9 +44,9 @@ describe("sod-di", function() {
 		expect(serviceCalled).toBe(1);
 
 		// error if no method provided
-		foo.registerFactory('fail', null, function(error) {
+		foo.register('fail', function(error) {
 			expect(error instanceof Error).toBe(true);
-		});
+		}).factory(null);
 	});
 
 	it("require()", function() {
@@ -77,7 +77,7 @@ describe("sod-di", function() {
 		// inheritance through newChild (creates new di + imports itself)
 		var bar = foo.newChild('bar');
 		// make bar di itself public
-		bar.setPublic('di');
+		bar.register('di').public();
 		// inheritance through imports argument
 		var baz = diFactory('baz', [foo, bar]);
 
@@ -99,7 +99,7 @@ describe("sod-di", function() {
 		expect(baz.get('fooDi')).toBe(null);
 
 		// set to public, now it is available
-		foo.setPublic('di');
+		foo.register('di').public();
 		expect(baz.get('fooDi')).toBe(foo);
 	});
 
@@ -155,14 +155,14 @@ describe("sod-di", function() {
 			}).toThrow();
 		});
 
-		it("di.registerFactory()", function() {
+		it("di.register().factory()", function() {
 			// errback
 			foo.require('unknown', errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
 
 			// without errback (throw)
 			expect(function() {
-				foo.registerFactory('x', false);
+				foo.register('x').factory(false);
 			}).toThrow();
 		});
 
@@ -180,11 +180,11 @@ describe("sod-di", function() {
 		});
 	});
 
-	it("registerFile() - add filename to stack on error", function() {
+	it("register().file() - add filename to stack on error", function() {
 		var foo = diFactory('foo');
 		var file = require('path').join(__dirname, 'brokenDependency.js');
 		var onError = sinon.spy();
-		foo.registerFile('dep', file);
+		foo.register('dep').file(file);
 		foo.require('dep', onError);
 		// two errors - broken factory + missing dependency
 		sinon.assert.calledTwice(onError);
@@ -195,9 +195,15 @@ describe("sod-di", function() {
 	it("showDependencies()", function() {
 		sinon.stub(console, 'log');
 
-		var foo = diFactory('afoo').register('apriv', 1).register('apub', 1).setPublic('apub');
-		var bar = diFactory('bbar').register('bpriv', 1).register('bpub', 1).setPublic('bpub');
-		var baz = diFactory('cbaz').register('cpriv', 1).register('cpub', 1).setPublic('cpub');
+		var foo = diFactory('afoo');
+		foo.register('apriv').value(1);
+		foo.register('apub').value(1).public();
+		var bar = diFactory('bbar');
+		bar.register('bpriv').value(1);
+		bar.register('bpub').value(1).public();
+		var baz = diFactory('cbaz');
+		baz.register('cpriv').value(1);
+		baz.register('cpub').value(1).public();
 
 		var result = '' +
 			'Dependency Injector: afoo\n' +

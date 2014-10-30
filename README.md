@@ -12,7 +12,7 @@ npm install sod-di
 
 ```javascript
 var di = require('sod-di')();
-di.register('value', 'my value');
+di.register('value').value('my value');
 di(function(value) {
 	console.log(value); // stdout: 'my value'
 });
@@ -46,19 +46,27 @@ Using dependency injection instead of require() in your project hugely improves 
 #### Dependency injector instance
 
 * **[invoke()](#invoke)**
-* **[mapInvoke()](#mapinvoke)**
 * **[file()](#file)**
 * **[callback()](#callback)**
 * **[register()](#register)**
-* **[registerFactory()](#registerfactory)**
-* **[registerFile()](#registerfile)**
-* **[setPublic()](#setpublic)**
 * **[get()](#get)**
 * **[require()](#require)**
 * **[import()](#import)**
 * **[newChild()](#newchild)**
 * **[showDependencies()](#showdependencies)**
 
+#### Dependency
+
+* **[value()](#value)**
+* **[factory()](#factory)**
+* **[file()](#file)**
+* **[public()](#public)**
+
+#### Appendix
+
+* **[Prefix by dependency injector name](#prefix-by-dependency-injector-name)**
+* **[Fetch dependency injector instance](#fetch-dependency-injector-instance)**
+* **[Everything is case insensitive](#everything-is-case-insensitive)**
 
 
 ### Factory
@@ -109,8 +117,8 @@ Call `di.invoke(fn)` on every dependency injector inside `dis` and return array 
 var diFactory = require('sod-di');
 var app1 = diFactory('app1');
 var app2 = diFactory('app2');
-app1.register('value', 'app 1 value');
-app2.register('value', 'app 2 value');
+app1.register('value').value('app 1 value');
+app2.register('value').value('app 2 value');
 var result = diFactory.mapInvoke([app1, app2], function(di, value) {
 	return di.diName + ' :: ' + value;
 });
@@ -146,7 +154,7 @@ Inject dependencies on `fn`.
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
-app.register('value', 'my value');
+app.register('value').value('my value');
 function myMethod(value) {
 	console.log(value);
 }
@@ -154,12 +162,6 @@ app(myMethod); // stdout: 'my value'
 app.invoke(myMethod); // stdout: 'my value'
 app(myMethod, { value: 'custom value' }); // stdout: 'custom value'
 ```
-
-
-
-#### mapInvoke()
-
-alias for `diFactory.mapInvoke`
 
 
 
@@ -212,7 +214,7 @@ Creates a function, that calls invoke() upon its execution.
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
-app.register('value', 'my value');
+app.register('value').value('my value');
 var callback = app.callback(function(value) {
 	console.log(value);
 });
@@ -223,122 +225,28 @@ setTimeout(callback, 500); // stdout after 500ms: 'my value'
 
 #### register()
 
-`register( name:string, value:* ):di`
+`register( name:string [, onError:function(err) ] ):Dependency`
 
 Register a dependency.
 
 ##### Arguments
 
 1. `name {string}`: Name of the dependency
-2. `value {*}`: The value that is being returned 
+2. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
 ##### Returns
 
-`{di}`: self
+`{Dependency}`: **[Instance of Dependency](#value)**
 
 ##### Example
 
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
-app.register('value', 'my value');
+app.register('value').value('my value');
 app(function(value) {
 	console.log(value); // stdout: 'my value'
 });
-```
-
-
-
-#### registerFactory()
-
-`registerFactory( name:string, fn:function [, onError:function(err) ] ):di`
-
-Register a function that becomes lazy invoked upon first retrieval. The return value of `fn` will be used as dependency value.
-
-##### Arguments
-
-1. `name {string}`: Name of the dependency
-2. `fn {function}`: Factory function
-3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
-
-##### Returns
-
-`{di}`: self
-
-##### Example
-
-```javascript
-var diFactory = require('sod-di');
-var app = diFactory('app');
-app.register('value', 1);
-app.register('logger', console.log.bind(console));
-// a factory function is called once on first injection and can request dependencies itself
-app.registerFactory('result', function(value) {
-	return foo + 1;
-});
-app(function(logger, value, result) {
-	logger(value, result); // stdout: 1, 2
-});
-```
-
-
-
-#### registerFile()
-
-`registerFile( name:string, file:string [, onError:function(err) ] ):di`
-
-Does `require(file)` and calls `registerFactory()` if file returns a function and `register()` otherwise. Adds `file` to error message on error.
-
-##### Arguments
-
-1. `name {string}`: Name of the dependency
-2. `file {string}`: Absolute path/to/file to require()
-3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
-
-##### Returns
-
-`{di}`: self
-
-##### Example
-
-```javascript
-var diFactory = require('sod-di');
-var app = diFactory('app');
-app.registerFile('value', '/my/value.js');
-app(function(value) {
-	console.log(value);
-});
-```
-
-
-
-#### setPublic()
-
-`setPublic( name:string ):di`
-
-Make a dependency visible if the dependency injector is being imported. 
-
-##### Arguments
-
-1. `name {string}`: Name of the dependency
-
-##### Returns
-
-`{di}`: self
-
-##### Example
-
-```javascript
-var diFactory = require('sod-di');
-var app = diFactory('app');
-var service = diFactory('service', [app]);
-app.register('private', 'my private value');
-app.register('public', 'my public value');
-app.setPublic('public');
-app.get('private'); // 'my private value'
-app.get('public'); // 'my public value'
-service.get('private'); // null - invisible for service, as dependency 'private' is not setPublic() in imported di
-service.get('public'); // 'my public value'
 ```
 
 
@@ -364,8 +272,8 @@ Get a single dependency.
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
-app.register('value', 'my value');
-app.registerFactory('myFactory', function(doesNotExist) {});
+app.register('value').value('my value');
+app.register('myFactory').factory(function(doesNotExist) {});
 app.get('value'); // 'my value'
 app.get('doesNotExist'); // null
 app.get('myFactory'); // throws `new diFactory.Error` as 'myFactory' requests a dependency, that does not exist 
@@ -392,7 +300,7 @@ Get a single dependency. Throw an error if dependency is not available.
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('app');
-app.get('value'); // throws `new diFactory.Error` as 'value' does not exist 
+app.require('value'); // throws `new diFactory.Error` as 'value' does not exist 
 ```
 
 
@@ -418,8 +326,7 @@ Import one or many existing dependency injectors.
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = diFactory('service');
-app.register('public', 'my public value');
-app.setPublic('public');
+app.register('public').value('my public value').public();
 service.import(app);
 service.get('public'); // 'my public value'
 ```
@@ -447,8 +354,7 @@ Create a new dependency injector and add self & self.imports as imports of the n
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = app.newChild('service');
-app.register('public', 'my public value');
-app.setPublic('public');
+app.register('public').value('my public value').public();
 service.get('public'); // 'my public value'
 ```
 
@@ -471,6 +377,125 @@ List all private and public dependencies of dependency injector and all public o
 `{undefined}`
 
 
+
+### Dependency
+
+You receive the chainable dependency object by calling **[register()](#register)**
+
+
+#### value()
+
+`value( value:* ):Dependency`
+
+Register a value.
+
+##### Arguments
+
+1. `value {*}`
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+app.register('value').value(1);
+app.register('logger').value(console.log.bind(console));
+app(function(logger, value) {
+	logger(value); // stdout: 1
+});
+```
+
+
+
+#### factory()
+
+`factory( fn:function ):Dependency`
+
+Register a function that becomes lazy invoked upon first retrieval. The return value of `fn` will be used as dependency value.
+
+##### Arguments
+
+1. `fn {function}`: Factory function
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+app.register('value').value(1);
+app.register('logger').value(console.log.bind(console));
+// a factory function is called once on first injection and can request dependencies itself
+app.register('result').factory(function(value) {
+	return foo + 1;
+});
+app(function(logger, value) {
+	logger(value, result); // stdout: 1, 2
+});
+```
+
+
+
+#### file()
+
+`file( file:string ):di`
+
+Does `require(file)` and calls `registerFactory()` if file returns a function and `register()` otherwise. Adds `file` to error message on error.
+
+##### Arguments
+
+1. `file {string}`: Absolute path/to/file to require()
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+app.register('value').file('/my/value.js');
+app(function(value) {
+	console.log(value);
+});
+```
+
+
+
+#### public()
+
+`public(  ):Dependency`
+
+Set the dependency to public. This value will we visible if its being requested as imported dependency injector.
+
+##### Arguments
+
+none
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+var service = app.newChild('service');
+app.register('public').value('my public value').public();
+service.get('public'); // 'my public value'
+```
+
+
+
 ## Prefix by dependency injector name
 
 You can target a specific dependency injector by prefixing the dependency
@@ -479,9 +504,8 @@ You can target a specific dependency injector by prefixing the dependency
 var diFactory = require('sod-di');
 var app = diFactory('app');
 var service = app.newChild('service');
-app.register('value', 'my app value');
-app.setPublic('value');
-service.register('value', 'my service value');
+app.register('value').value('my app value').public();
+service.register('value').value('my service value');
 service(function(value, appValue, serviceValue) {
 	console.log(value); // 'my service value'
 	console.log(appValue); // 'my app value'
@@ -490,7 +514,7 @@ service(function(value, appValue, serviceValue) {
 ```
 
 
-## Fetch dependency injector itself
+## Fetch dependency injector instance
 
 Every dependency injector adds itself as "di" and "[name]di"
 
@@ -504,12 +528,12 @@ app(function(di) {
 
 ## Everything is case insensitive
 
-Every dependency is case insensitive. Uppercase letters can be used for readability.
+Every dependency is case insensitive. Uppercase letters may be used for readability.
 
 ```javascript
 var diFactory = require('sod-di');
 var app = diFactory('aPP');
-app.register('valUE', 'my app value');
+app.register('valUE').value('my app value');
 service(function(valUE, aPPvalUE, value, appValue, appvalue) {
 	console.log(valUE);    // stdout: 'my app value'
 	console.log(aPPvalUE); // stdout: 'my app value'
