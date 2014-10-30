@@ -22,10 +22,23 @@ var _ = require('lodash');
 var factoryKey = '__di_factory';
 var fileKey = '__di_filename';
 
+/**
+ * @param {string[]} args
+ * @param {object} dependencies
+ * @returns {string}
+ */
 function getMissingDependencies(args, dependencies) {
 	return _.remove(_.map(args, function(value, index) {
 		return dependencies[index] === null ? value : null;
 	})).join(', ');
+}
+
+/**
+ * @param {diFactory.Error} error
+ * @throws
+ */
+function $throw(error) {
+	throw error;
 }
 
 /**
@@ -50,10 +63,6 @@ function diFactory(name, imports) {
 	// public and private dependency names for .showDependencies() - key is lowercase: { name: true }
 	var _names = {};
 
-	function $throw(error) {
-		throw error;
-	}
-
 	/**
 	 * dependency inject on fn
 	 * @name di
@@ -69,7 +78,8 @@ function diFactory(name, imports) {
 		var args, injections;
 
 		if(typeof fn !== 'function') {
-			return (typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'fn must be typeof function'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'fn must be typeof function'));
+			return null;
 		}
 
 		args = getParameterNames(fn);
@@ -79,7 +89,8 @@ function diFactory(name, imports) {
 		}) : args.map(di.get);
 
 		if(injections.indexOf(null) !== -1) {
-			return (typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
+			return null;
 		}
 
 		return fn.apply(fn, injections);
@@ -216,7 +227,8 @@ function diFactory(name, imports) {
 	di.require = function(name, onError) {
 		var dependency;
 		if((dependency = di.get(name, null, onError)) === null) {
-			return (typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" required, but not registered'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" required, but not registered'));
+			return null;
 		}
 
 		return dependency;
@@ -246,7 +258,8 @@ function diFactory(name, imports) {
 	 */
 	di.registerFactory = function(name, fn, onError) {
 		if(typeof fn !== 'function') {
-			return (typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" was defined as factory but is not typeof function'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" was defined as factory but is not typeof function'));
+			return di;
 		}
 
 		var callback = di.callback(fn);

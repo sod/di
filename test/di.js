@@ -183,10 +183,13 @@ describe("sod-di", function() {
 	it("registerFile() - add filename to stack on error", function() {
 		var foo = diFactory('foo');
 		var file = require('path').join(__dirname, 'brokenDependency.js');
+		var onError = sinon.spy();
 		foo.registerFile('dep', file);
-		foo.require('dep', function(error) {
-			expect(error.message.split(file).length).toBe(2);
-		});
+		foo.require('dep', onError);
+		// two errors - broken factory + missing dependency
+		sinon.assert.calledTwice(onError);
+		// first error mentions file
+		expect(onError.getCall(0).args[0].message).toContain(file);
 	});
 
 	it("showDependencies()", function() {
