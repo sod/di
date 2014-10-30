@@ -236,7 +236,7 @@ Register a dependency.
 
 ##### Returns
 
-`{Dependency}`: **[Instance of Dependency](#value)**
+`{Dependency}`: Chainable instance of **[Dependency](#dependency-1)** to modify dependency value
 
 ##### Example
 
