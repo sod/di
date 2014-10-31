@@ -365,7 +365,7 @@ diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	 */
 	function DependencyInjectionError(name, message, context) {
 		this.name = 'DependencyInjectionError';
-		this.message = 'di.js: ' + message + ' (di: ' + name + ')';
+		this.message = message + ' (di: ' + name + ')';
 		this.message += context && context[fileKey] ? '\n    at file (' + context[fileKey] + ':1:0)' : '';
 		this.message += context ? [].concat('', '... context ...', context.toString().split('\n').splice(0, 5), '...', '').join('\n') : '';
 		Error.captureStackTrace && Error.captureStackTrace(this, DependencyInjectionError);
