@@ -17,6 +17,7 @@
  */
 
 var getParameterNames = require('get-parameter-names');
+var path = require('path');
 var _ = require('lodash');
 
 var factoryKey = '__di_factory';
@@ -112,13 +113,14 @@ function diFactory(name, imports) {
 	 * @name di
 	 * @throws Error if fn is not a function
 	 * @throws Error if at least one dependency is missing
-	 * @param {string} file
+	 * @param {string|string[]} file - if file === string[], then path.join(file)
 	 * @param {object} [custom] overwrite injections with custom values
 	 * @param {function(err)} [onError] - callback to catch errors, if no callback is provided,
 	 *      this method throws on error on error
 	 * @returns {*}
 	 */
 	di.file = function(file, custom, onError) {
+		file = typeof file === 'string' ? file : path.join.apply(path, file);
 		var fn = require(file);
 		if(typeof fn === 'function') {
 			fn[fileKey] = file;
@@ -274,10 +276,11 @@ function diFactory(name, imports) {
 
 	/**
 	 * require file and this.factory() if module.exports is function, otherwise this.value()
-	 * @param {string} file
+	 * @param {string|string[]} file - if file === string[], then path.join(file)
 	 * @returns {Dependency}
 	 */
 	Dependency.prototype.file = function(file) {
+		file = typeof file === 'string' ? file : path.join.apply(path, file);
 		var method = 'value';
 		var contents = require(file);
 		if(typeof contents === 'function') {
