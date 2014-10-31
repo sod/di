@@ -11,17 +11,22 @@ npm install sod-di
 ## Example
 
 ```javascript
-var di = require('sod-di')();
-di.register('value').value('my value');
-di(function(value) {
-	console.log(value); // stdout: 'my value'
+di.register('pi').value(Math.PI);
+di.register('logger').value(console);
+di.register('area').factory(function(pi) {
+	return function(radius) {
+		return radius * radius * pi;
+	};
+});
+di(function(logger, area) {
+	logger.log(area(2)); // stdout: 12.566370614359172
 });
 ```
+
 
 ## Why
 
 Using dependency injection instead of require() in your project hugely improves and simplifies the ability to write unit tests.
-
 
 
 ## Features
@@ -168,13 +173,13 @@ app(myMethod, { value: 'custom value' }); // stdout: 'custom value'
 
 #### file()
 
-`file( file:string [, custom:Object ] [, onError:function(err) ] ):*`
+`file( file:string|string[] [, custom:Object ] [, onError:function(err) ] ):*`
 
 Does `require(file)` and calls `invoke()` if file returns a function. Adds `file` to error message on error.
 
 ##### Arguments
 
-1. `fn {function}`: The function to inject the dependencies on
+1. `file {string|string[]}`: If file === string[], then path.join(file)
 2. `[custom] {object}`: Provide custom dependencies
 3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
@@ -445,13 +450,13 @@ app(function(logger, value) {
 
 #### file()
 
-`file( file:string ):di`
+`file( file:string|string[] ):di`
 
 Does `require(file)` and calls `registerFactory()` if file returns a function and `register()` otherwise. Adds `file` to error message on error.
 
 ##### Arguments
 
-1. `file {string}`: Absolute path/to/file to require()
+1. `file {string|string[]}`: Absolute path/to/file to require(). If file === string[], then path.join(file)
 
 ##### Returns
 
