@@ -72,7 +72,7 @@ Using dependency injection instead of require() in your project hugely improves 
 * **[Prefix by dependency injector name](#prefix-by-dependency-injector-name)**
 * **[Fetch dependency injector instance](#fetch-dependency-injector-instance)**
 * **[Everything is case insensitive](#everything-is-case-insensitive)**
-
+* **[Error Messages](#error-messages)**
 
 ### Factory
 
@@ -179,7 +179,7 @@ Does `require(file)` and calls `invoke()` if file returns a function. Adds `file
 
 ##### Arguments
 
-1. `file {string|string[]}`: If file === string[], then path.join(file)
+1. `file {string|string[]}`: Absolute path/to/file to require(). If file === string[], then file() adds the paths together with `path.join(...file)`
 2. `[custom] {object}`: Provide custom dependencies
 3. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
 
@@ -439,9 +439,9 @@ app.register('value').value(1);
 app.register('logger').value(console.log.bind(console));
 // a factory function is called once on first injection and can request dependencies itself
 app.register('result').factory(function(value) {
-	return foo + 1;
+	return value + 1;
 });
-app(function(logger, value) {
+app(function(logger, value, result) {
 	logger(value, result); // stdout: 1, 2
 });
 ```
@@ -452,11 +452,11 @@ app(function(logger, value) {
 
 `file( file:string|string[] ):di`
 
-Does `require(file)` and calls `registerFactory()` if file returns a function and `register()` otherwise. Adds `file` to error message on error.
+Does `require(file)` and calls `factory()` if file returns a function and `value()` otherwise. Adds `file` to error message on error.
 
 ##### Arguments
 
-1. `file {string|string[]}`: Absolute path/to/file to require(). If file === string[], then path.join(file)
+1. `file {string|string[]}`: Absolute path/to/file. If file === string[], then file() adds the paths together with `path.join(...file)`
 
 ##### Returns
 
@@ -546,4 +546,67 @@ service(function(valUE, aPPvalUE, value, appValue, appvalue) {
 	console.log(appValue); // stdout: 'my app value'
 	console.log(appvalue); // stdout: 'my app value'
 });
+```
+
+## Error Messages
+
+### invoke()
+
+Missing dependencies are added to the error message.
+
+```javascript
+var diFactory = require('./di.js');
+var di = diFactory('app');
+di.register('value').value(1);
+di(function(test, value, dep) {});
+```
+
+#### Message
+
+```
+DependencyInjectionError: could not inject "test, dep" (either missing or not setPublic() if imported) (di: app)
+... context ...
+function (test, value, dep) {}
+...
+```
+
+
+### file()
+
+If you register dependencies with `register('name').file('file.js')` and invoke with `file('file.js')`, the error message includes the filename.
+
+```
+// 'my/file.js'
+module.exports = function (test, value, dep) {}
+```
+
+```
+var diFactory = require('./di.js');
+var di = diFactory('app');
+di.register('value').value(1);
+di.file('my/file.js');
+```
+
+#### Message
+
+```
+DependencyInjectionError: could not inject "test, dep" (either missing or not setPublic() if imported) (di: app)
+    at file (my/file.js:1:0)
+... context ...
+function (test, value, dep) {}
+...
+```
+
+
+### require()
+
+```javascript
+var di = diFactory('app');
+di.require('test');
+```
+
+#### Message
+
+```
+DependencyInjectionError: "test" required, but not registered (di: app)
 ```
