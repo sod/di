@@ -3,7 +3,10 @@ require('expectations');
 
 describe("sod-di", function() {
 
-	var diFactory = require('../di.js');
+	var diFactory = require(process.argv.indexOf('html-cov') !== -1 ? '../di-cov.js' : '../di.js');
+	var testfileFnParts = [__dirname, 'dependencyFn.js'];
+	var testfileFn = require('path').join(__dirname, testfileFnParts[1]);
+	var testfileValue = require('path').join(__dirname, 'dependencyValue.js');
 
 	it("case insensitive, di self register, prefix with di name access", function() {
 		var foo = diFactory('foo');
@@ -103,6 +106,30 @@ describe("sod-di", function() {
 		expect(baz.get('fooDi')).toBe(foo);
 	});
 
+	it("import cache", function() {
+		var a, b;
+		var value = 1;
+		var factory = sinon.stub().returns(value);
+		var foo = diFactory('foo');
+		var bar = foo.newChild('bar');
+
+		// do not cache null
+		foo.register('stu').value(undefined);
+		expect(bar.get('cached')).toBe(null);
+
+		// cache import result
+		foo.register('cached').factory(factory).public();
+		a = bar.get('cached');
+		b = bar.get('cached');
+		expect(a).toBe(value);
+		expect(a).toBe(b);
+		sinon.assert.calledOnce(factory);
+
+		// import clears cache - but value remains correct
+		bar.import(diFactory('new'));
+		expect(bar.get('cached')).toBe(value);
+	});
+
 	describe("expose error class", function() {
 		expect(diFactory.Error).toBeDefined();
 		expect(diFactory.DependencyInjectionError).toBeDefined();
@@ -144,6 +171,23 @@ describe("sod-di", function() {
 			}).toThrow();
 		});
 
+		it("di.file()", function() {
+			// errback
+			foo.file(testfileFn, null, errback = sinon.spy());
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].message).toContain(testfileFn);
+
+			// without errback (throw)
+			expect(function() {
+				foo.file(testfileFn);
+			}).toThrow();
+
+			// missing file
+			foo.file('some-non-existing-file', null, errback = sinon.spy());
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(false);
+			expect(errback.getCall(0).args[0] instanceof Error).toBe(true);
+		});
+
 		it("di.require()", function() {
 			// errback
 			foo.require('unknown', errback = sinon.spy());
@@ -180,20 +224,46 @@ describe("sod-di", function() {
 		});
 	});
 
+	it("file()", function() {
+		var foo = diFactory('foo');
+
+		expect(foo.file(testfileFn, { brokenDependency: 1 })).toBe(1);
+		expect(foo.file(testfileFnParts, { brokenDependency: 2 })).toBe(2);
+
+		// return null on missing file - and throw/onError Error
+		expect(foo.file('missing-file', null, function(error) {
+			expect(error instanceof Error);
+		})).toBe(null);
+
+		// return null if fn is not a function - and throw/onError diFactory.Error
+		expect(foo.file(testfileValue, null, function(error) {
+			expect(error instanceof diFactory.Error);
+		})).toBe(null);
+	});
+
 	it("register().file() - add filename to stack on error", function() {
 		var foo = diFactory('foo');
-		var filename = 'brokenDependency.js';
-		var file = require('path').join(__dirname, filename);
 		var onError = sinon.spy();
-		foo.register('depa').file(file);
-		foo.register('depb').file([__dirname, filename]);
+		foo.register('depa').file(testfileFn);
+		foo.register('depb').file(testfileFnParts);
 		foo.require('depa', onError);
 		foo.require('depb', onError);
 		// two errors - broken factory + missing dependency (times two)
 		sinon.assert.callCount(onError, 4);
 		// first error mentions file
-		expect(onError.getCall(0).args[0].message).toContain(file);
-		expect(onError.getCall(2).args[0].message).toContain(file);
+		expect(onError.getCall(0).args[0].message).toContain(testfileFn);
+		expect(onError.getCall(2).args[0].message).toContain(testfileFn);
+	});
+
+	it("mapInvoke", function() {
+		var foo = diFactory('foo');
+		var bar = diFactory('bar');
+		foo.register('value').value(1);
+		bar.register('value').value(2);
+		var result = diFactory.mapInvoke([foo, bar], function(value) {
+			return value;
+		});
+		expect(result).toEqual([1, 2]);
 	});
 
 	it("showDependencies()", function() {

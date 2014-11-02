@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "test-cover": "jscoverage di.js && mocha -R html-cov > di-cov.html"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "expectations": "^0.2.5",
+    "jscoverage": "^0.5.9",
     "mocha": "^2.0.1",
     "sinon": "^1.11.1"
   }
