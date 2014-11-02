@@ -120,13 +120,20 @@ function diFactory(name, imports) {
 	 * @returns {*}
 	 */
 	di.file = function(file, custom, onError) {
-		file = typeof file === 'string' ? file : path.join.apply(path, file);
-		var fn = require(file);
-		if(typeof fn === 'function') {
-			fn[fileKey] = file;
-			return di(fn, custom, onError);
+		var fn;
+		file = _.isArray(file) ? path.join.apply(path, file) : file;
+		try {
+			fn = require(file);
+		} catch(error) {
+			(typeof onError === 'function' ? onError : $throw)(error);
+			return null;
 		}
-		return null;
+		if(typeof fn !== 'function') {
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'require("' + file + '") did not return a function'));
+			return null;
+		}
+		fn[fileKey] = file;
+		return di(fn, custom, onError);
 	};
 
 	/**
@@ -280,7 +287,7 @@ function diFactory(name, imports) {
 	 * @returns {Dependency}
 	 */
 	Dependency.prototype.file = function(file) {
-		file = typeof file === 'string' ? file : path.join.apply(path, file);
+		file = _.isArray(file) ? path.join.apply(path, file) : file;
 		var method = 'value';
 		var contents = require(file);
 		if(typeof contents === 'function') {
