@@ -626,11 +626,12 @@ You can catch errors by `error.code`. Available codes are:
 var di = diFactory('app');
 di.file('/my/file.js', null, function(error) {
 	if(error.code === diFactory.Error.COULD_NOT_REQUIRE) {
-		// ignore this error
+		// just emit a warning if require failed, but keep the process alive
+		logger.warn(error.message);
 		return; 
 	}
 	
-	// throw everything else
+	// throw every other error
 	throw error;
 });
 ```
