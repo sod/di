@@ -79,7 +79,7 @@ function diFactory(name, imports) {
 		var args, injections;
 
 		if(typeof fn !== 'function') {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'fn must be typeof function'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, 'fn must be typeof function'));
 			return null;
 		}
 
@@ -90,7 +90,7 @@ function diFactory(name, imports) {
 		}) : args.map(di.get);
 
 		if(injections.indexOf(null) !== -1) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.DEPENDENCY_NOT_FOUND, di.diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
 			return null;
 		}
 
@@ -125,11 +125,11 @@ function diFactory(name, imports) {
 		try {
 			fn = require(file);
 		} catch(error) {
-			(typeof onError === 'function' ? onError : $throw)(error);
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.COULD_NOT_REQUIRE, di.diName, error.message));
 			return null;
 		}
 		if(typeof fn !== 'function') {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, 'require("' + file + '") did not return a function'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, 'require("' + file + '") did not return a function'));
 			return null;
 		}
 		fn[fileKey] = file;
@@ -225,7 +225,7 @@ function diFactory(name, imports) {
 	di.require = function(name, onError) {
 		var dependency;
 		if((dependency = di.get(name, null, onError)) === null) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(di.diName, '"' + name + '" required, but not registered'));
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.DEPENDENCY_NOT_FOUND, di.diName, '"' + name + '" required, but not registered'));
 			return null;
 		}
 
@@ -271,7 +271,7 @@ function diFactory(name, imports) {
 	 */
 	Dependency.prototype.factory = function(fn) {
 		if(typeof fn !== 'function') {
-			this.onError(new diFactory.Error(di.diName, '"' + name + '" was defined as factory but is not typeof function'));
+			this.onError(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, '"' + name + '" was defined as factory but is not typeof function'));
 			return this;
 		}
 
@@ -364,13 +364,15 @@ diFactory.mapInvoke = function(dis, fn) {
  */
 diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	/**
+	 * @param {number} code
 	 * @param {string} name
 	 * @param {string} message
 	 * @param {function} [context]
 	 * @param {string} [context.__di_filename]
 	 * @constructor
 	 */
-	function DependencyInjectionError(name, message, context) {
+	function DependencyInjectionError(code, name, message, context) {
+		this.code = code;
 		this.name = 'DependencyInjectionError';
 		this.message = message + ' (di: ' + name + ')';
 		this.message += context && context[fileKey] ? '\n    at file (' + context[fileKey] + ':1:0)' : '';
@@ -381,6 +383,10 @@ diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	DependencyInjectionError.prototype = new Error();
 	DependencyInjectionError.prototype.constructor = DependencyInjectionError;
 	DependencyInjectionError.prototype.name = 'DependencyInjectionError';
+
+	DependencyInjectionError.COULD_NOT_REQUIRE = 101;
+	DependencyInjectionError.NOT_A_FUNCTION = 102;
+	DependencyInjectionError.DEPENDENCY_NOT_FOUND = 103;
 
 	return DependencyInjectionError;
 }());

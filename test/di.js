@@ -131,10 +131,13 @@ describe("sod-di", function() {
 	});
 
 	describe("expose error class", function() {
-		expect(diFactory.Error).toBeDefined();
 		expect(diFactory.DependencyInjectionError).toBeDefined();
-		expect(diFactory.DependencyInjectionError).toBe(diFactory.Error);
-		expect(new diFactory.DependencyInjectionError() instanceof Error).toBe(true);
+		expect(diFactory.Error).toBeDefined();
+		expect(diFactory.Error).toBe(diFactory.DependencyInjectionError);
+		expect(diFactory.Error.COULD_NOT_REQUIRE).toBe(101);
+		expect(diFactory.Error.NOT_A_FUNCTION).toBe(102);
+		expect(diFactory.Error.DEPENDENCY_NOT_FOUND).toBe(103);
+		expect(new diFactory.Error() instanceof Error).toBe(true);
 	});
 
 	describe("error handling", function() {
@@ -147,6 +150,7 @@ describe("sod-di", function() {
 			// errback
 			foo(false, false, errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.NOT_A_FUNCTION);
 
 			// without errback (throw)
 			expect(function() {
@@ -158,6 +162,7 @@ describe("sod-di", function() {
 			// errback
 			foo(brokenFn, false, errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.DEPENDENCY_NOT_FOUND);
 			// put missing dependencies into the message
 			expect(errback.getCall(0).args[0].message).toMatch(/"missingA, missingB"/);
 			// put method context into the message
@@ -175,6 +180,7 @@ describe("sod-di", function() {
 			// errback
 			foo.file(testfileFn, null, errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.DEPENDENCY_NOT_FOUND);
 			expect(errback.getCall(0).args[0].message).toContain(testfileFn);
 
 			// without errback (throw)
@@ -184,14 +190,15 @@ describe("sod-di", function() {
 
 			// missing file
 			foo.file('some-non-existing-file', null, errback = sinon.spy());
-			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(false);
-			expect(errback.getCall(0).args[0] instanceof Error).toBe(true);
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.COULD_NOT_REQUIRE);
 		});
 
 		it("di.require()", function() {
 			// errback
 			foo.require('unknown', errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.DEPENDENCY_NOT_FOUND);
 
 			// without errback (throw)
 			expect(function() {
@@ -203,6 +210,7 @@ describe("sod-di", function() {
 			// errback
 			foo.require('unknown', errback = sinon.spy());
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.DEPENDENCY_NOT_FOUND);
 
 			// without errback (throw)
 			expect(function() {
@@ -215,6 +223,7 @@ describe("sod-di", function() {
 			var cb = foo.callback(brokenFn, false, errback = sinon.spy());
 			cb();
 			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+			expect(errback.getCall(0).args[0].code).toBe(diFactory.Error.DEPENDENCY_NOT_FOUND);
 
 			// without errback (throw)
 			expect(function() {
@@ -232,7 +241,7 @@ describe("sod-di", function() {
 
 		// return null on missing file - and throw/onError Error
 		expect(foo.file('missing-file', null, function(error) {
-			expect(error instanceof Error);
+			expect(error instanceof diFactory.Error);
 		})).toBe(null);
 
 		// return null if fn is not a function - and throw/onError diFactory.Error
