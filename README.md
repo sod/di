@@ -485,9 +485,9 @@ app(function(value) {
 
 #### fileValue()
 
-`file( file:string|string[] ):di`
+`fileValue( file:string|string[] ):di`
 
-Does `require(file)` and calls `value()`
+Does `require(file)` and calls `value()`. Shows filename in error message on error.
 
 ##### Arguments
 
@@ -509,9 +509,9 @@ app.register('value').fileValue('/my/value.js');
 
 #### fileFactory()
 
-`file( file:string|string[] ):di`
+`fileFactory( file:string|string[] ):di`
 
-Does `require(file)` and calls `factory()`
+Does `require(file)` and calls `factory()`. Shows filename in error message on error.
 
 ##### Arguments
 
