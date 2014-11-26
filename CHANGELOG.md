@@ -1,3 +1,12 @@
+# 1.2.0 (2014-11-26)
+
+## Changes
+
+- add api `register().fileValue()`
+- add api `register().fileFactory()`
+- pass errors to onError if `require()` throws while `register('key', onError).[file|fileValue|fileFactory]()`
+- set `enumerable: false` on internal file property for error handling
+
 # 1.1.3 (2014-11-02)
 
 ## Changes

@@ -231,6 +231,49 @@ describe("sod-di", function() {
 				cb();
 			}).toThrow();
 		});
+
+		it("di.register().file()", function() {
+			foo.register('file', errback = sinon.spy()).file('$unknown');
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+
+			// without errback (throw)
+			expect(function() {
+				foo.register('file').file('$unknown');
+			}).toThrow();
+		});
+
+		it("di.register().file() - add filename to stack on error", function() {
+			var onError = sinon.spy();
+			foo.register('depa').file(testfileFn);
+			foo.register('depb').file(testfileFnParts);
+			foo.require('depa', onError);
+			foo.require('depb', onError);
+			// two errors - broken factory + missing dependency (times two)
+			sinon.assert.callCount(onError, 4);
+			// first error mentions file
+			expect(onError.getCall(0).args[0].message).toContain(testfileFn);
+			expect(onError.getCall(2).args[0].message).toContain(testfileFn);
+		});
+
+		it("di.register().fileValue()", function() {
+			foo.register('file', errback = sinon.spy()).fileValue('$unknown');
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+
+			// without errback (throw)
+			expect(function() {
+				foo.register('file').fileValue('$unknown');
+			}).toThrow();
+		});
+
+		it("di.register().fileFactory()", function() {
+			foo.register('file', errback = sinon.spy()).fileFactory('$unknown');
+			expect(errback.getCall(0).args[0] instanceof diFactory.Error).toBe(true);
+
+			// without errback (throw)
+			expect(function() {
+				foo.register('file').fileFactory('$unknown');
+			}).toThrow();
+		});
 	});
 
 	it("file()", function() {
@@ -250,18 +293,28 @@ describe("sod-di", function() {
 		})).toBe(null);
 	});
 
-	it("register().file() - add filename to stack on error", function() {
+	it("register().file() - choose factory or value on contents", function() {
+		var foo = diFactory('foo');
+		foo.register('brokenDependency').value('injected value');
+		foo.register('value').file(testfileValue);
+		foo.register('factory').file(testfileFn);
+		expect(foo.require('value')).toBe('dependency value');
+		expect(foo.require('factory')).toBe('injected value');
+	});
+
+	it("register().fileValue()", function() {
+		var foo = diFactory('foo');
+		foo.register('file').fileValue(testfileFn);
+		expect(foo.get('file')).toBe(require(testfileFn));
+	});
+
+	it("register().fileFactory()", function() {
 		var foo = diFactory('foo');
 		var onError = sinon.spy();
-		foo.register('depa').file(testfileFn);
-		foo.register('depb').file(testfileFnParts);
-		foo.require('depa', onError);
-		foo.require('depb', onError);
-		// two errors - broken factory + missing dependency (times two)
-		sinon.assert.callCount(onError, 4);
-		// first error mentions file
-		expect(onError.getCall(0).args[0].message).toContain(testfileFn);
-		expect(onError.getCall(2).args[0].message).toContain(testfileFn);
+		foo.register('file').fileFactory(testfileFn);
+		foo.require('file', onError);
+		sinon.assert.called(onError);
+		expect(onError.getCall(0).args[0].message).toContain('could not inject "brokenDependency"');
 	});
 
 	it("mapInvoke", function() {

@@ -65,6 +65,8 @@ Using dependency injection instead of require() in your project hugely improves 
 * **[value()](#value)**
 * **[factory()](#factory)**
 * **[file()](#file)**
+* **[fileValue()](#filevalue)**
+* **[fileFactory()](#filefactory)**
 * **[public()](#public)**
 
 #### Appendix
@@ -238,7 +240,7 @@ Register a dependency.
 ##### Arguments
 
 1. `name {string}`: Name of the dependency
-2. `[onError] {function(error)}`: Error callback in case this methods triggers an error. If onError is missing, the error will be thrown
+2. `[onError] {function(error)}`: Error callback in case an error triggers in the register chain. If onError is missing, the error will be thrown
 
 ##### Returns
 
@@ -253,6 +255,11 @@ app.register('value').value('my value');
 app(function(value) {
 	console.log(value); // stdout: 'my value'
 });
+
+// error handling
+app.register('value', function(error) {
+	console.log(error); // COULD_NOT_REQUIRE error
+}).file('this/file/does/not/exist');
 ```
 
 
@@ -473,6 +480,55 @@ app(function(value) {
 	console.log(value);
 });
 ```
+
+
+
+#### fileValue()
+
+`file( file:string|string[] ):di`
+
+Does `require(file)` and calls `value()`
+
+##### Arguments
+
+1. `file {string|string[]}`: Absolute path/to/file. If file === string[], then file() adds the paths together with `path.join(...file)`
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+app.register('value').fileValue('/my/value.js');
+```
+
+
+
+#### fileFactory()
+
+`file( file:string|string[] ):di`
+
+Does `require(file)` and calls `factory()`
+
+##### Arguments
+
+1. `file {string|string[]}`: Absolute path/to/file. If file === string[], then file() adds the paths together with `path.join(...file)`
+
+##### Returns
+
+`{Dependency}`: self
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+app.register('factory').fileFactory('/my/factory.js');
+```
+
 
 
 

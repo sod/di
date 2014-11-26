@@ -109,6 +109,29 @@ function diFactory(name, imports) {
 	di.diFactory = diFactory;
 
 	/**
+	 * @param {string|string[]} file
+	 * @param {function} onError
+	 * @returns {*}
+	 * @private
+	 */
+	function getFileContents(file, onError) {
+		var contents;
+		file = _.isArray(file) ? path.join.apply(path, file) : file;
+		try {
+			contents = require(file);
+			typeof contents === 'function' && Object.defineProperty(contents, fileKey, {
+				enumerable: false,
+				writable: false,
+				value: file
+			});
+			return contents;
+		} catch(error) {
+			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.COULD_NOT_REQUIRE, di.diName, error.message));
+			return null;
+		}
+	}
+
+	/**
 	 * dependency inject on file if module.exports is function
 	 * @name di
 	 * @throws Error if fn is not a function
@@ -121,18 +144,13 @@ function diFactory(name, imports) {
 	 */
 	di.file = function(file, custom, onError) {
 		var fn;
-		file = _.isArray(file) ? path.join.apply(path, file) : file;
-		try {
-			fn = require(file);
-		} catch(error) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.COULD_NOT_REQUIRE, di.diName, error.message));
+		if((fn = getFileContents(file, onError)) === null) {
 			return null;
 		}
 		if(typeof fn !== 'function') {
 			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, 'require("' + file + '") did not return a function'));
 			return null;
 		}
-		fn[fileKey] = file;
 		return di(fn, custom, onError);
 	};
 
@@ -287,14 +305,36 @@ function diFactory(name, imports) {
 	 * @returns {Dependency}
 	 */
 	Dependency.prototype.file = function(file) {
-		file = _.isArray(file) ? path.join.apply(path, file) : file;
-		var method = 'value';
-		var contents = require(file);
-		if(typeof contents === 'function') {
-			method = 'factory';
-			contents[fileKey] = file;
+		var contents;
+		if((contents = getFileContents(file, this.onError)) !== null) {
+			this[typeof contents === 'function' ? 'factory' : 'value'](contents);
 		}
-		this[method](contents);
+		return this;
+	};
+
+	/**
+	 * require file and this.value() its contents
+	 * @param {string|string[]} file - if file === string[], then path.join(file)
+	 * @returns {Dependency}
+	 */
+	Dependency.prototype.fileValue = function(file) {
+		var contents;
+		if((contents = getFileContents(file, this.onError)) !== null) {
+			this.value(contents);
+		}
+		return this;
+	};
+
+	/**
+	 * require file and this.factory() its contents
+	 * @param {string|string[]} file - if file === string[], then path.join(file)
+	 * @returns {Dependency}
+	 */
+	Dependency.prototype.fileFactory = function(file) {
+		var contents;
+		if((contents = getFileContents(file, this.onError)) !== null) {
+			this.factory(contents);
+		}
 		return this;
 	};
 
