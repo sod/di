@@ -63,7 +63,7 @@ Using dependency injection instead of require() in your project hugely improves 
 #### Dependency
 
 * **[value()](#value)**
-* **[factory()](#factory)**
+* **[factory()](#factory-2)**
 * **[file()](#file)**
 * **[fileValue()](#filevalue)**
 * **[fileFactory()](#filefactory)**
