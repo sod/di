@@ -22,6 +22,8 @@ var _ = require('lodash');
 
 var factoryKey = '__di_factory';
 var fileKey = '__di_filename';
+var limitCharacters = /[^a-z0-9]+/ig;
+var appendedNumbers = /^[0-9]+/;
 
 /**
  * @param {string[]} args
@@ -35,11 +37,38 @@ function getMissingDependencies(args, dependencies) {
 }
 
 /**
- * @param {diFactory.Error} error
+ * @param {function} [errorHandler]
+ * @param {diFactory.Error|DiError} error
  * @throws
  */
-function $throw(error) {
-	throw error;
+function handleError(errorHandler, error) {
+	if(typeof errorHandler !== 'function') {
+		throw error;
+	}
+	errorHandler(error);
+}
+
+/**
+ * @param {string|string[]} file
+ * @param {function} onError
+ * @param {string} diName
+ * @returns {*}
+ * @private
+ */
+function getFileContents(file, onError, diName) {
+	var contents;
+	file = _.isArray(file) ? path.join.apply(path, file) : file;
+	try {
+		contents = require(file);
+		typeof contents === 'function' && Object.defineProperty(contents, fileKey, {
+			enumerable: false,
+			value: file
+		});
+		return contents;
+	} catch(error) {
+		handleError(onError, new DiError(DiError.COULD_NOT_REQUIRE, diName, error.message));
+		return null;
+	}
 }
 
 /**
@@ -49,6 +78,9 @@ function $throw(error) {
  * @returns {di}
  */
 function diFactory(name, imports) {
+	// sanitized injector name in lowercase
+	var diName = String(name).replace(limitCharacters, '').replace(appendedNumbers, '').toLowerCase();
+
 	// public and private dependencies - key is lowercase: { name: value } and { <di-name>name: value }
 	var _registers = {};
 
@@ -79,7 +111,7 @@ function diFactory(name, imports) {
 		var args, injections;
 
 		if(typeof fn !== 'function') {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, 'fn must be typeof function'));
+			handleError(onError, new DiError(DiError.NOT_A_FUNCTION, diName, 'fn must be typeof function'));
 			return null;
 		}
 
@@ -90,7 +122,7 @@ function diFactory(name, imports) {
 		}) : args.map(di.get);
 
 		if(injections.indexOf(null) !== -1) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.DEPENDENCY_NOT_FOUND, di.diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
+			handleError(onError, new DiError(DiError.DEPENDENCY_NOT_FOUND, diName, 'could not inject "' + getMissingDependencies(args, injections) + '" (either missing or not setPublic() if imported)', fn));
 			return null;
 		}
 
@@ -109,29 +141,6 @@ function diFactory(name, imports) {
 	di.diFactory = diFactory;
 
 	/**
-	 * @param {string|string[]} file
-	 * @param {function} onError
-	 * @returns {*}
-	 * @private
-	 */
-	function getFileContents(file, onError) {
-		var contents;
-		file = _.isArray(file) ? path.join.apply(path, file) : file;
-		try {
-			contents = require(file);
-			typeof contents === 'function' && Object.defineProperty(contents, fileKey, {
-				enumerable: false,
-				writable: false,
-				value: file
-			});
-			return contents;
-		} catch(error) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.COULD_NOT_REQUIRE, di.diName, error.message));
-			return null;
-		}
-	}
-
-	/**
 	 * dependency inject on file if module.exports is function
 	 * @name di
 	 * @throws Error if fn is not a function
@@ -144,11 +153,11 @@ function diFactory(name, imports) {
 	 */
 	di.file = function(file, custom, onError) {
 		var fn;
-		if((fn = getFileContents(file, onError)) === null) {
+		if((fn = getFileContents(file, onError, diName)) === null) {
 			return null;
 		}
 		if(typeof fn !== 'function') {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, 'require("' + file + '") did not return a function'));
+			handleError(onError, new DiError(DiError.NOT_A_FUNCTION, diName, 'require("' + file + '") did not return a function'));
 			return null;
 		}
 		return di(fn, custom, onError);
@@ -180,16 +189,16 @@ function diFactory(name, imports) {
 		var lines = [];
 
 		processed = processed || {};
-		if(processed.hasOwnProperty(di.diName)) {
+		if(processed.hasOwnProperty(diName)) {
 			return;
 		}
-		processed[di.diName] = true;
+		processed[diName] = true;
 
 		if(!inherited) {
-			lines.push('Dependency Injector: ' + di.diName, '');
+			lines.push('Dependency Injector: ' + diName, '');
 		}
 
-		lines.push('  ' + di.diName + (inherited ? ' (inherited)' : ''));
+		lines.push('  ' + diName + (inherited ? ' (inherited)' : ''));
 		lines = lines.concat('    public', _.intersection(_.keys(_names), _.keys(_public)).map(indent));
 
 		if(!inherited) {
@@ -243,7 +252,7 @@ function diFactory(name, imports) {
 	di.require = function(name, onError) {
 		var dependency;
 		if((dependency = di.get(name, null, onError)) === null) {
-			(typeof onError === 'function' ? onError : $throw)(new diFactory.Error(diFactory.Error.DEPENDENCY_NOT_FOUND, di.diName, '"' + name + '" required, but not registered'));
+			handleError(onError, new DiError(DiError.DEPENDENCY_NOT_FOUND, diName, '"' + name + '" required, but not registered'));
 			return null;
 		}
 
@@ -258,8 +267,8 @@ function diFactory(name, imports) {
 	 */
 	function Dependency(name, onError) {
 		this.di = di;
-		this.name = String(name).replace(/[^a-z]+/ig, '').toLowerCase();
-		this.onError = typeof onError === 'function' ? onError : $throw;
+		this.name = String(name).replace(limitCharacters, '').replace(appendedNumbers, '').toLowerCase();
+		this.onError = onError;
 	}
 
 	/**
@@ -267,7 +276,7 @@ function diFactory(name, imports) {
 	 * @returns {Dependency}
 	 */
 	Dependency.prototype.public = function() {
-		_public[this.name] = _public[di.diName + this.name] = true;
+		_public[this.name] = _public[diName + this.name] = true;
 		return this;
 	};
 
@@ -276,7 +285,7 @@ function diFactory(name, imports) {
 	 * @returns {Dependency}
 	 */
 	Dependency.prototype.value = function(value) {
-		_registers[this.name] = _registers[di.diName + this.name] = value;
+		_registers[this.name] = _registers[diName + this.name] = value;
 		_names[this.name] = true;
 		return this;
 	};
@@ -289,7 +298,7 @@ function diFactory(name, imports) {
 	 */
 	Dependency.prototype.factory = function(fn) {
 		if(typeof fn !== 'function') {
-			this.onError(new diFactory.Error(diFactory.Error.NOT_A_FUNCTION, di.diName, '"' + name + '" was defined as factory but is not typeof function'));
+			handleError(this.onError, new DiError(DiError.NOT_A_FUNCTION, diName, '"' + name + '" was defined as factory but is not typeof function'));
 			return this;
 		}
 
@@ -306,7 +315,7 @@ function diFactory(name, imports) {
 	 */
 	Dependency.prototype.file = function(file) {
 		var contents;
-		if((contents = getFileContents(file, this.onError)) !== null) {
+		if((contents = getFileContents(file, this.onError, diName)) !== null) {
 			this[typeof contents === 'function' ? 'factory' : 'value'](contents);
 		}
 		return this;
@@ -319,7 +328,7 @@ function diFactory(name, imports) {
 	 */
 	Dependency.prototype.fileValue = function(file) {
 		var contents;
-		if((contents = getFileContents(file, this.onError)) !== null) {
+		if((contents = getFileContents(file, this.onError, diName)) !== null) {
 			this.value(contents);
 		}
 		return this;
@@ -332,7 +341,7 @@ function diFactory(name, imports) {
 	 */
 	Dependency.prototype.fileFactory = function(file) {
 		var contents;
-		if((contents = getFileContents(file, this.onError)) !== null) {
+		if((contents = getFileContents(file, this.onError, diName)) !== null) {
 			this.factory(contents);
 		}
 		return this;
@@ -383,7 +392,7 @@ function diFactory(name, imports) {
 		};
 	};
 
-	di.diName = String(name).replace(/[^a-z]+/ig, '').toLowerCase();
+	di.diName = diName;
 	di.import(imports);
 	di.register('di').value(di);
 	return di;
@@ -402,7 +411,7 @@ diFactory.mapInvoke = function(dis, fn) {
 /**
  * @name DependencyInjectionError
  */
-diFactory.Error = diFactory.DependencyInjectionError = (function() {
+var DiError = diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	/**
 	 * @param {number} code
 	 * @param {string} name
@@ -413,7 +422,6 @@ diFactory.Error = diFactory.DependencyInjectionError = (function() {
 	 */
 	function DependencyInjectionError(code, name, message, context) {
 		this.code = code;
-		this.name = 'DependencyInjectionError';
 		this.message = message + ' (di: ' + name + ')';
 		this.message += context && context[fileKey] ? '\n    at file (' + context[fileKey] + ':1:0)' : '';
 		this.message += context ? [].concat('', '... context ...', context.toString().split('\n').splice(0, 5), '...', '').join('\n') : '';

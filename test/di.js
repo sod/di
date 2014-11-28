@@ -130,6 +130,14 @@ describe("sod-di", function() {
 		expect(bar.get('cached')).toBe(value);
 	});
 
+	it("allow /[a-z0-9]/i as injector and dependency name", function() {
+		var di = diFactory('123f456{(]´äb');
+		expect(di.diName).toBe('f456b');
+		di.register('123g789{(]´äc').value('1');
+		expect(di.require('g789c')).toBe('1');
+		expect(di.require('f456bG789c')).toBe('1');
+	});
+
 	describe("expose error class", function() {
 		expect(diFactory.DependencyInjectionError).toBeDefined();
 		expect(diFactory.Error).toBeDefined();
