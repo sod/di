@@ -1,24 +1,6 @@
-/**
- * Dependency Injection
- *
- * Usage:
- * var di = require('di.js')()
- * di.register('foo', 1);
- * di.register('log', console.log.bind(console));
- *
- * // a factory function is called once on first injection and can request dependencies itself
- * di.registerFactory('bar', function(foo) {
- *	return foo + 1;
- * });
- *
- * di(function(log, foo, bar) {
- *	log([foo, bar]); // [ 1, 2 ]
- * });
- */
-
-var getParameterNames = require('get-parameter-names');
 var path = require('path');
 var _ = require('lodash');
+var getParameterNames = require('get-parameter-names');
 
 var factoryKey = '__di_factory';
 var fileKey = '__di_filename';
@@ -291,7 +273,7 @@ function diFactory(name, imports) {
 	};
 
 	/**
-	 * register a namespace, that becomes dependencies injected itself and is executed once on first request
+	 * register a namespace, that becomes dependency injected itself and is executed once on first request
 	 * @throws Error if fn is not a function
 	 * @param {function} fn
 	 * @returns {Dependency}
