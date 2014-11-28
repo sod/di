@@ -1,3 +1,9 @@
+# 1.2.1 (2014-11.28)
+
+## Changes
+
+- allow numbers in injector and dependency names
+
 # 1.2.0 (2014-11-26)
 
 ## Changes
