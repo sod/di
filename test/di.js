@@ -4,9 +4,10 @@ require('expectations');
 describe("sod-di", function() {
 
 	var diFactory = require(process.argv.indexOf('html-cov') !== -1 ? '../di-cov.js' : '../di.js');
-	var testfileFnParts = [__dirname, 'dependencyFn.js'];
+	var testfileFnParts = [__dirname, '../fixture/dependencyFn.js'];
 	var testfileFn = require('path').join(__dirname, testfileFnParts[1]);
-	var testfileValue = require('path').join(__dirname, 'dependencyValue.js');
+	var testfileValue = require('path').join(__dirname, '../fixture/dependencyValue.js');
+	var testfileError = require('path').join(__dirname, '../fixture/dependencyError.js');
 
 	it("case insensitive, di self register, prefix with di name access", function() {
 		var foo = diFactory('foo');
@@ -261,6 +262,13 @@ describe("sod-di", function() {
 			// first error mentions file
 			expect(onError.getCall(0).args[0].message).toContain(testfileFn);
 			expect(onError.getCall(2).args[0].message).toContain(testfileFn);
+		});
+
+		it("di.register().file() - propagate stack from require error", function() {
+			foo.register('file', errback = sinon.spy()).fileValue(testfileError);
+
+			expect(errback.getCall(0).args[0].stack).toContain('thisMethodDoesNotExist is not defined');
+			expect(errback.getCall(0).args[0].stack).toContain('dependencyError.js');
 		});
 
 		it("di.register().fileValue()", function() {

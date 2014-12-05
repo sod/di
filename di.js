@@ -48,7 +48,7 @@ function getFileContents(file, onError, diName) {
 		});
 		return contents;
 	} catch(error) {
-		handleError(onError, new DiError(DiError.COULD_NOT_REQUIRE, diName, error.message));
+		handleError(onError, new DiError(DiError.COULD_NOT_REQUIRE, diName, 'Could not require file', null, error));
 		return null;
 	}
 }
@@ -400,14 +400,19 @@ var DiError = diFactory.Error = diFactory.DependencyInjectionError = (function()
 	 * @param {string} message
 	 * @param {function} [context]
 	 * @param {string} [context.__di_filename]
+	 * @param {Error} [error] inherit stack from existing error
 	 * @constructor
 	 */
-	function DependencyInjectionError(code, name, message, context) {
+	function DependencyInjectionError(code, name, message, context, error) {
 		this.code = code;
-		this.message = message + ' (di: ' + name + ')';
+		this.message = this.name + ': ' + message + ' (di: ' + name + ')';
 		this.message += context && context[fileKey] ? '\n    at file (' + context[fileKey] + ':1:0)' : '';
 		this.message += context ? [].concat('', '... context ...', context.toString().split('\n').splice(0, 5), '...', '').join('\n') : '';
-		Error.captureStackTrace && Error.captureStackTrace(this, DependencyInjectionError);
+		if(error instanceof Error) {
+			this.stack = this.message + '\n' + error.stack;
+		} else if(Error.captureStackTrace) {
+			Error.captureStackTrace(this, DependencyInjectionError);
+		}
 	}
 
 	DependencyInjectionError.prototype = new Error();
