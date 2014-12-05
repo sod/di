@@ -1,4 +1,10 @@
-# 1.2.1 (2014-11.28)
+# 1.2.2 (2014-12-05)
+
+## Changes
+
+- propagate original stack on require error
+
+# 1.2.1 (2014-11-28)
 
 ## Changes
 
