@@ -333,7 +333,7 @@ function diFactory(name, imports) {
 	 * register a namespace
 	 * @param {string} name
 	 * @param {function} [onError]
-	 * @returns {diFactory.Dependency}
+	 * @returns {Dependency}
 	 */
 	di.register = function(name, onError) {
 		return new Dependency(name, onError);
