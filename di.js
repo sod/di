@@ -193,6 +193,24 @@ function diFactory(name, imports) {
 	};
 
 	/**
+	 * get internal dependency / invoke factory
+	 * @param {string} key in lowercase
+	 * @param publicOnly
+	 * @param onError
+	 * @returns {*|null}
+	 */
+	function getDependency(key, publicOnly, onError) {
+		if(_registers.hasOwnProperty(key) && (publicOnly !== true || _public[key])) {
+			if(_registers[key] && _registers[key][factoryKey]) {
+				_registers[key] = _registers[key]({ __di_onError: onError });
+			}
+			return _registers[key];
+		}
+
+		return null;
+	}
+
+	/**
 	 * @throws Error if name is a factory and factory does not find a dependency
 	 * @param {string} name
 	 * @param {boolean} [publicOnly]
@@ -201,13 +219,10 @@ function diFactory(name, imports) {
 	 * @returns {*|null}
 	 */
 	di.get = function(name, publicOnly, onError) {
-		var index, dependency, key = name.toLowerCase();
+		var index, dependency, key = String(name).toLowerCase();
 
-		if(_registers.hasOwnProperty(key) && (publicOnly !== true || _public[key])) {
-			if(_registers[key] && _registers[key][factoryKey]) {
-				_registers[key] = _registers[key]({ __di_onError: onError });
-			}
-			return _registers[key];
+		if((dependency = getDependency(key, publicOnly, onError)) !== null) {
+			return dependency;
 		}
 
 		if(_importCache.hasOwnProperty(key)) {
@@ -319,14 +334,26 @@ function diFactory(name, imports) {
 	/**
 	 * require file and this.factory() its contents
 	 * @param {string|string[]} file - if file === string[], then path.join(file)
+	 * @param {boolean} [lazy=true] - if false, fn becomes invoked immediately
 	 * @returns {Dependency}
 	 */
-	Dependency.prototype.fileFactory = function(file) {
+	Dependency.prototype.fileFactory = function(file, lazy) {
 		var contents;
 		if((contents = getFileContents(file, this.onError, diName)) !== null) {
-			this.factory(contents);
+			this.factory(contents, lazy);
 		}
 		return this;
+	};
+
+	/**
+	 * returns value of current dependency
+	 * By default, factory() and fileFactory() lazy invoke on first use. You can enforce its
+	 * evaluation by calling this method directly after registration:
+	 *      di.register('foo').fileFactory('myFactory.js').get();
+	 * @returns {*|null}
+	 */
+	Dependency.prototype.get = function() {
+		return getDependency(this.name, false, this.onError);
 	};
 
 	/**

@@ -67,6 +67,7 @@ Using dependency injection instead of require() in your project hugely improves 
 * **[file()](#file)**
 * **[fileValue()](#filevalue)**
 * **[fileFactory()](#filefactory)**
+* **[get()](#get-2)**
 * **[public()](#public)**
 
 #### Appendix
@@ -527,6 +528,32 @@ Does `require(file)` and calls `factory()`. Shows filename in error message on e
 var diFactory = require('sod-di');
 var app = diFactory('app');
 app.register('factory').fileFactory('/my/factory.js');
+```
+
+
+
+#### get()
+
+`get( ):*|null`
+
+Returns value of current dependency.
+By default, factory() and fileFactory() lazy invoke on first use. You can enforce its
+evaluation by calling this method directly after registration.
+
+##### Arguments
+
+none
+
+##### Returns
+
+`{*|null}`: value
+
+##### Example
+
+```javascript
+var diFactory = require('sod-di');
+var app = diFactory('app');
+var value = app.register('factory').fileFactory('/my/factory.js').get();
 ```
 
 

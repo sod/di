@@ -30,7 +30,7 @@ describe("sod-di", function() {
 		expect(foo.get('service')).toBe(service);
 	});
 
-	it("register().factory()", function() {
+	it("register().factory(fn)", function() {
 		var foo = diFactory('foo');
 		var value = 123;
 		var serviceCalled = 0;
@@ -51,6 +51,20 @@ describe("sod-di", function() {
 		foo.register('fail', function(error) {
 			expect(error instanceof Error).toBe(true);
 		}).factory(null);
+	});
+
+	it("register().get()", function() {
+		var foo = diFactory('foo');
+		var value = 123;
+		var serviceCalled = 0;
+		var service = function(fooValue, value) {
+			serviceCalled += 1;
+			return fooValue + value;
+		};
+		foo.register('value').value(value);
+		var result = foo.register('service').factory(service).get();
+		expect(serviceCalled).toBe(1);
+		expect(result).toBe(value + value);
 	});
 
 	it("require()", function() {
