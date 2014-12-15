@@ -1,3 +1,10 @@
+# 1.2.3 (2014-12-15)
+
+## Changes
+
+- fix jsdoc return value on `.register()` for code completion in WebStorm
+- add new method `register().get()` for immediate factory invocation
+
 # 1.2.2 (2014-12-05)
 
 ## Changes
