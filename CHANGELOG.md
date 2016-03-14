@@ -1,3 +1,9 @@
+# 1.2.5 (2016-03-14)
+
+## Changes
+
+- [npm] update lodash to ^4.6.1
+
 # 1.2.4 (2016-03-14)
 
 ## Changes
