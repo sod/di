@@ -371,51 +371,63 @@ describe("sod-di", function() {
 		expect(result).toEqual([1, 2]);
 	});
 
-	it("showDependencies()", function() {
-		sinon.stub(console, 'log');
+	describe("showDependencies()", function () {
+		it("showDependencies((result) => void) should pass dependency tree into result", function() {
+			var foo = diFactory('afoo');
+			foo.register('apriv').value(1);
+			foo.register('apub').value(1).public();
+			var bar = diFactory('bbar');
+			bar.register('bpriv').value(1);
+			bar.register('bpub').value(1).public();
+			var baz = diFactory('cbaz');
+			baz.register('cpriv').value(1);
+			baz.register('cpub').value(1).public();
 
-		var foo = diFactory('afoo');
-		foo.register('apriv').value(1);
-		foo.register('apub').value(1).public();
-		var bar = diFactory('bbar');
-		bar.register('bpriv').value(1);
-		bar.register('bpub').value(1).public();
-		var baz = diFactory('cbaz');
-		baz.register('cpriv').value(1);
-		baz.register('cpub').value(1).public();
+			var result = '' +
+				'Dependency Injector: afoo\n' +
+				'\n' +
+				'  afoo\n' +
+				'    public\n' +
+				'      apub\n' +
+				'    private\n' +
+				'      di\n' +
+				'      apriv\n' +
+				'  bbar (inherited)\n' +
+				'    public\n' +
+				'      bpub\n' +
+				'  cbaz (inherited)\n' +
+				'    public\n' +
+				'      cpub\n';
 
-		var result = '' +
-			'Dependency Injector: afoo\n' +
-			'\n' +
-			'  afoo\n' +
-			'    public\n' +
-			'      apub\n' +
-			'    private\n' +
-			'      di\n' +
-			'      apriv\n' +
-			'  bbar (inherited)\n' +
-			'    public\n' +
-			'      bpub\n' +
-			'  cbaz (inherited)\n' +
-			'    public\n' +
-			'      cpub\n';
+			foo.import([bar, baz, /* catch circular: */ foo]);
 
-		foo.import([bar, baz, /* catch circular: */ foo]);
+			foo.showDependencies(function(output) {
+				expect(output).toBe(result);
+			});
 
-		foo.showDependencies(function(output) {
-			expect(output).toBe(result);
+			// cancel on circular
+			foo.showDependencies(function(output) {
+				expect(output).toBe(undefined);
+			}, true, {afoo: true});
 		});
 
-		foo.showDependencies();
-		sinon.assert.calledOnce(console.log);
-		sinon.assert.calledWithMatch(console.log, result);
+		it("showDependencies() should use console.log if first argument is missing", function() {
+			var foo = diFactory('foo');
+			foo.register('apriv').value(1);
+			var result = '';
+			foo.showDependencies(function(output) {
+				result = output;
+			});
 
-		// cancel on circular
-		foo.showDependencies(function(output) {
-			expect(output).toBe(undefined);
-		}, true, {afoo: true});
-
-		console.log.restore();
+			sinon.stub(console, 'log');
+			foo.showDependencies();
+			try {
+				sinon.assert.calledOnce(console.log);
+				sinon.assert.calledWithMatch(console.log, result);
+			} finally {
+				console.log.restore();
+			}
+		});
 	});
 
 	it("custom injections", function() {
