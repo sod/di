@@ -187,7 +187,7 @@ function diFactory(name, imports) {
 			lines = lines.concat('    private', _.difference(_.keys(_names), _.keys(_public)).map(indent));
 		}
 
-		_.invoke(_imports, 'showDependencies', add, true, processed);
+		_.invokeMap(_imports, 'showDependencies', add, true, processed);
 
 		;(fn || console.log)(lines.join('\n') + (inherited ? '' : '\n'));
 	};
@@ -413,7 +413,7 @@ function diFactory(name, imports) {
  * @returns {*[]}
  */
 diFactory.mapInvoke = function(dis, fn) {
-	return _.invoke(dis, 'invoke', fn);
+	return _.invokeMap(dis, 'invoke', fn);
 };
 
 /**

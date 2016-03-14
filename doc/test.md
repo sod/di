@@ -11,5 +11,5 @@ npm test
 
 ```bash
 npm install
-npm run-script test-cover
+npm run test-cover
 ```

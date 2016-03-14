@@ -166,6 +166,14 @@ describe("sod-di", function() {
 		it("should be instanceof Error", function() {
 			expect(new diFactory.Error() instanceof Error).toBe(true);
 		});
+
+		it("should work in non V8 environment", function () {
+			var captureStackTrace = Error.captureStackTrace;
+			Error.captureStackTrace = undefined;
+			var error = new diFactory.Error();
+			expect(error.stack).toBeTruthy();
+			Error.captureStackTrace = captureStackTrace;
+		});
 	});
 
 	describe("error handling", function() {

@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "test-cover": "jscoverage di.js && mocha -R html-cov > di-cov.html"
+    "test-cover": "istanbul cover _mocha"
   },
   "repository": {
     "type": "git",
@@ -28,11 +28,11 @@
   "homepage": "https://github.com/sod/di",
   "dependencies": {
     "get-parameter-names": "^0.2.0",
-    "lodash": "^2.4.1"
+    "lodash": "^4.6.1"
   },
   "devDependencies": {
-    "expectations": "^0.2.5",
-    "jscoverage": "^0.5.9",
+    "expectations": "^0.5.2",
+    "istanbul": "^0.4.2",
     "mocha": "^2.0.1",
     "sinon": "^1.11.1"
   }
