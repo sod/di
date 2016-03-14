@@ -153,14 +153,19 @@ describe("sod-di", function() {
 		expect(di.require('f456bG789c')).toBe('1');
 	});
 
-	describe("expose error class", function() {
-		expect(diFactory.DependencyInjectionError).toBeDefined();
-		expect(diFactory.Error).toBeDefined();
-		expect(diFactory.Error).toBe(diFactory.DependencyInjectionError);
-		expect(diFactory.Error.COULD_NOT_REQUIRE).toBe(101);
-		expect(diFactory.Error.NOT_A_FUNCTION).toBe(102);
-		expect(diFactory.Error.DEPENDENCY_NOT_FOUND).toBe(103);
-		expect(new diFactory.Error() instanceof Error).toBe(true);
+	describe("DependencyInjectionError", function() {
+		it("expose error class", function () {
+			expect(diFactory.DependencyInjectionError).toBeDefined();
+			expect(diFactory.Error).toBeDefined();
+			expect(diFactory.Error).toBe(diFactory.DependencyInjectionError);
+			expect(diFactory.Error.COULD_NOT_REQUIRE).toBe(101);
+			expect(diFactory.Error.NOT_A_FUNCTION).toBe(102);
+			expect(diFactory.Error.DEPENDENCY_NOT_FOUND).toBe(103);
+		});
+
+		it("should be instanceof Error", function() {
+			expect(new diFactory.Error() instanceof Error).toBe(true);
+		});
 	});
 
 	describe("error handling", function() {

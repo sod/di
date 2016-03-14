@@ -1,3 +1,10 @@
+# 1.2.4 (2016-03-14)
+
+## Changes
+
+- [fix] stack wasn't propagated on error on newer node.js versions
+- [chore] remove unused and undocumented `lazy` argument in `fileFactory(file, lazy)`
+
 # 1.2.3 (2014-12-15)
 
 ## Changes

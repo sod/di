@@ -334,13 +334,12 @@ function diFactory(name, imports) {
 	/**
 	 * require file and this.factory() its contents
 	 * @param {string|string[]} file - if file === string[], then path.join(file)
-	 * @param {boolean} [lazy=true] - if false, fn becomes invoked immediately
 	 * @returns {Dependency}
 	 */
-	Dependency.prototype.fileFactory = function(file, lazy) {
+	Dependency.prototype.fileFactory = function(file) {
 		var contents;
 		if((contents = getFileContents(file, this.onError, diName)) !== null) {
-			this.factory(contents, lazy);
+			this.factory(contents);
 		}
 		return this;
 	};
@@ -439,12 +438,12 @@ var DiError = diFactory.Error = diFactory.DependencyInjectionError = (function()
 			this.stack = this.message + '\n' + error.stack;
 		} else if(Error.captureStackTrace) {
 			Error.captureStackTrace(this, DependencyInjectionError);
+		} else {
+			this.stack = (new Error()).stack;
 		}
 	}
 
-	DependencyInjectionError.prototype = new Error();
-	DependencyInjectionError.prototype.constructor = DependencyInjectionError;
-	DependencyInjectionError.prototype.name = 'DependencyInjectionError';
+	DependencyInjectionError.prototype = Error.prototype;
 
 	DependencyInjectionError.COULD_NOT_REQUIRE = 101;
 	DependencyInjectionError.NOT_A_FUNCTION = 102;
